@@ -1,30 +1,39 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryDark = Color(0xFF4A42E8);
-  static const Color secondary = Color(0xFFFF6584);
-  static const Color accent = Color(0xFF00D2FF);
-  static const Color backgroundDark = Color(0xFF1A1A2E);
-  static const Color backgroundMedium = Color(0xFF16213E);
-  static const Color backgroundLight = Color(0xFF0F3460);
-  static const Color surface = Color(0xFF232946);
+  static const Color primary = Color(0xFF00C9A7);
+  static const Color primaryDark = Color(0xFF009B7D);
+  static const Color secondary = Color(0xFFFFB347);
+  static const Color accent = Color(0xFFE8A87C);
+  static const Color backgroundDark = Color(0xFF0D0D0D);
+  static const Color backgroundMedium = Color(0xFF1A1A2E);
+  static const Color backgroundLight = Color(0xFF2D2D44);
+  static const Color surface = Color(0xFF1E1E30);
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB8B8D4);
+  static const Color textSecondary = Color(0xFFB0B0C8);
   static const Color success = Color(0xFF00E676);
   static const Color warning = Color(0xFFFFAB00);
   static const Color error = Color(0xFFFF5252);
-  static const Color cardGradientStart = Color(0xFF2D2D5E);
-  static const Color cardGradientEnd = Color(0xFF1A1A3E);
+  static const Color gold = Color(0xFFFFD700);
+  static const Color roseGold = Color(0xFFE8A87C);
+  static const Color emerald = Color(0xFF00C9A7);
+  static const Color cardGradientStart = Color(0xFF1E1E30);
+  static const Color cardGradientEnd = Color(0xFF151520);
 
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, accent],
+    colors: [primary, Color(0xFF00E5C1)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient goldGradient = LinearGradient(
+    colors: [Color(0xFFFFD700), Color(0xFFFFB347)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient backgroundGradient = LinearGradient(
-    colors: [backgroundDark, backgroundMedium, backgroundLight],
+    colors: [backgroundDark, backgroundMedium, Color(0xFF1A1A2E)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
@@ -34,11 +43,17 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  static const LinearGradient premiumGradient = LinearGradient(
+    colors: [Color(0xFF00C9A7), Color(0xFFFFD700)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 class AppStrings {
   static const String appName = 'BodyFit Market';
-  static const String appTagline = 'Find Your Perfect Fit';
+  static const String appTagline = 'Stylique Your Perfect Fit';
   static const String trialDays = '7';
   static const String subscriptionPrice = 'Rp 49.000/bulan';
 

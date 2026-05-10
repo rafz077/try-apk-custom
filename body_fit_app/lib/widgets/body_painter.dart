@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/body_measurement.dart';
 import '../utils/constants.dart';
@@ -22,15 +23,19 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
   late AnimationController _animController;
   late Animation<double> _pulseAnimation;
   String? _selectedPart;
+  double _rotationX = 0.0;
+  double _rotationY = 0.0;
+  double _prevDx = 0.0;
+  double _prevDy = 0.0;
 
   @override
   void initState() {
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+    _pulseAnimation = Tween<double>(begin: 0.97, end: 1.03).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
     );
   }
@@ -43,21 +48,64 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return GestureDetector(
-          onTapDown: (details) => _handleTap(details, context),
-          child: CustomPaint(
-            size: const Size(250, 450),
-            painter: BodyPainter(
-              measurement: widget.measurement,
-              highlightPart: _selectedPart ?? widget.highlightPart,
-              pulseValue: _pulseAnimation.value,
-            ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: AppColors.premiumGradient,
+            borderRadius: BorderRadius.circular(20),
           ),
-        );
-      },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.threed_rotation, color: Colors.white, size: 16),
+              SizedBox(width: 6),
+              Text('3D View - Geser untuk rotasi',
+                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onPanStart: (details) {
+            _prevDx = details.localPosition.dx;
+            _prevDy = details.localPosition.dy;
+          },
+          onPanUpdate: (details) {
+            setState(() {
+              _rotationY += (details.localPosition.dx - _prevDx) * 0.01;
+              _rotationX += (details.localPosition.dy - _prevDy) * 0.005;
+              _rotationX = _rotationX.clamp(-0.3, 0.3);
+              _rotationY = _rotationY.clamp(-0.8, 0.8);
+              _prevDx = details.localPosition.dx;
+              _prevDy = details.localPosition.dy;
+            });
+          },
+          onTapDown: (details) => _handleTap(details, context),
+          child: AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateX(_rotationX)
+                  ..rotateY(_rotationY),
+                child: CustomPaint(
+                  size: const Size(280, 480),
+                  painter: BodyPainter(
+                    measurement: widget.measurement,
+                    highlightPart: _selectedPart ?? widget.highlightPart,
+                    pulseValue: _pulseAnimation.value,
+                    rotationY: _rotationY,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -71,16 +119,16 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
   }
 
   String? _getBodyPart(Offset position) {
-    if (position.dy < 60) return 'head';
-    if (position.dy < 80) return 'neck';
-    if (position.dy < 110) return 'shoulder';
-    if (position.dy < 200) {
-      if (position.dx < 70 || position.dx > 180) return 'arm';
+    if (position.dy < 70) return 'head';
+    if (position.dy < 95) return 'neck';
+    if (position.dy < 130) return 'shoulder';
+    if (position.dy < 230) {
+      if (position.dx < 80 || position.dx > 200) return 'arm';
       return 'chest';
     }
-    if (position.dy < 260) return 'waist';
-    if (position.dy < 300) return 'hips';
-    if (position.dy < 420) return 'leg';
+    if (position.dy < 290) return 'waist';
+    if (position.dy < 330) return 'hips';
+    if (position.dy < 450) return 'leg';
     return 'foot';
   }
 
@@ -133,20 +181,37 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
         size = '';
     }
 
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        content: Row(
           children: [
-            Text(info, style: const TextStyle(fontWeight: FontWeight.bold)),
-            if (size.isNotEmpty) Text(size),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.straighten, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(info, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  if (size.isNotEmpty) Text(size, style: const TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
           ],
         ),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -156,31 +221,46 @@ class BodyPainter extends CustomPainter {
   final BodyMeasurement? measurement;
   final String? highlightPart;
   final double pulseValue;
+  final double rotationY;
 
-  BodyPainter({this.measurement, this.highlightPart, this.pulseValue = 1.0});
+  BodyPainter({this.measurement, this.highlightPart, this.pulseValue = 1.0, this.rotationY = 0.0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final centerX = size.width / 2;
-    final scale = size.height / 450;
+    final scale = size.height / 480;
+    // Apply depth offset based on rotation for 3D effect
+    final depthOffset = sin(rotationY) * 15;
 
     final bodyPaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
+      ..shader = LinearGradient(
+        colors: [
+          AppColors.primary.withOpacity(0.4),
+          AppColors.primary.withOpacity(0.2),
+          AppColors.emerald.withOpacity(0.3),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final outlinePaint = Paint()
-      ..color = AppColors.primary
+      ..color = AppColors.primary.withOpacity(0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
     final highlightPaint = Paint()
-      ..color = AppColors.accent.withOpacity(0.5)
+      ..color = AppColors.gold.withOpacity(0.5)
       ..style = PaintingStyle.fill;
 
     final glowPaint = Paint()
-      ..color = AppColors.accent.withOpacity(0.15 * pulseValue)
+      ..color = AppColors.primary.withOpacity(0.08 * pulseValue)
       ..style = PaintingStyle.fill
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+
+    // 3D depth shadow for side-facing elements
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
 
     // Calculate proportions based on measurements
     double shoulderWidth = 70 * scale;
@@ -203,6 +283,16 @@ class BodyPainter extends CustomPainter {
         height: size.height * 0.7 * pulseValue,
       ),
       glowPaint,
+    );
+
+    // Draw 3D depth shadow behind body
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX + depthOffset, size.height * 0.45),
+        width: shoulderWidth * 1.8,
+        height: size.height * 0.6,
+      ),
+      shadowPaint,
     );
 
     // Head
@@ -350,8 +440,9 @@ class BodyPainter extends CustomPainter {
   void _drawMeasurementLabels(Canvas canvas, Size size, double centerX,
       double scale, double sw, double cw, double ww, double hw) {
     final textStyle = TextStyle(
-      color: AppColors.textSecondary,
+      color: AppColors.gold,
       fontSize: 9 * scale,
+      fontWeight: FontWeight.w600,
     );
 
     void drawLabel(String text, Offset position) {
@@ -379,6 +470,7 @@ class BodyPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant BodyPainter oldDelegate) {
     return oldDelegate.highlightPart != highlightPart ||
-        oldDelegate.pulseValue != pulseValue;
+        oldDelegate.pulseValue != pulseValue ||
+        oldDelegate.rotationY != rotationY;
   }
 }

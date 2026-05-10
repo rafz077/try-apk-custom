@@ -47,6 +47,78 @@ class ProductCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Product image
+                if (product.imageUrl.isNotEmpty)
+                  Container(
+                    height: 160,
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      color: AppColors.surface,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        product.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.surface,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(_getCategoryIcon(product.category),
+                                    color: AppColors.primary.withOpacity(0.5), size: 48),
+                                const SizedBox(height: 8),
+                                Text(product.category,
+                                    style: TextStyle(color: AppColors.textSecondary.withOpacity(0.5), fontSize: 12)),
+                              ],
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: AppColors.primary,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    height: 120,
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withOpacity(0.1),
+                          AppColors.surface,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(_getCategoryIcon(product.category),
+                            color: AppColors.primary.withOpacity(0.6), size: 40),
+                        const SizedBox(height: 6),
+                        Text(product.category,
+                            style: TextStyle(color: AppColors.textSecondary.withOpacity(0.6), fontSize: 11)),
+                      ],
+                    ),
+                  ),
                 Row(
                   children: [
                     // Match score badge
@@ -218,6 +290,18 @@ class ProductCard extends StatelessWidget {
     );
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Atasan': return Icons.checkroom;
+      case 'Bawahan': return Icons.straighten;
+      case 'Sepatu': return Icons.ice_skating;
+      case 'Jaket & Outer': return Icons.layers;
+      case 'Pakaian Olahraga': return Icons.fitness_center;
+      case 'Pakaian Formal': return Icons.business_center;
+      default: return Icons.shopping_bag;
+    }
+  }
+
   Color _getMatchColor(double score) {
     if (score >= 0.9) return AppColors.success;
     if (score >= 0.8) return Colors.lightGreen;
@@ -228,27 +312,23 @@ class ProductCard extends StatelessWidget {
   Future<void> _openProduct(BuildContext context) async {
     final uri = Uri.parse(product.productUrl);
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text('Tidak dapat membuka ${product.marketplace}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        try {
+          await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (e2) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Tidak dapat membuka ${product.marketplace}: $e2'),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          }
+        }
       }
     }
   }

@@ -47,7 +47,7 @@ class _ProductMatchScreenState extends State<ProductMatchScreen> {
       widget.measurement!,
       category: _selectedCategory,
       marketplace: _selectedMarketplace,
-      limit: 30,
+      limit: 50,
     );
 
     setState(() {

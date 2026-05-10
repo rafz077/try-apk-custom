@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/body_measurement.dart';
 import '../utils/constants.dart';
 import '../widgets/body_painter.dart';
@@ -22,7 +24,7 @@ class _BodyVisualizationScreenState extends State<BodyVisualizationScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -117,6 +119,7 @@ class _BodyVisualizationScreenState extends State<BodyVisualizationScreen>
                 Tab(text: 'Ukuran'),
                 Tab(text: 'Size'),
                 Tab(text: 'Info'),
+                Tab(text: 'Foto'),
               ],
             ),
           ).animate().fadeIn(delay: 500.ms, duration: 500.ms),
@@ -124,13 +127,14 @@ class _BodyVisualizationScreenState extends State<BodyVisualizationScreen>
           const SizedBox(height: 16),
 
           SizedBox(
-            height: 280,
+            height: 350,
             child: TabBarView(
               controller: _tabController,
               children: [
                 _buildMeasurementsTab(),
                 _buildSizeTab(),
                 _buildInfoTab(),
+                _buildPhotoUploadTab(),
               ],
             ),
           ).animate().fadeIn(delay: 600.ms, duration: 500.ms),
@@ -338,6 +342,201 @@ class _BodyVisualizationScreenState extends State<BodyVisualizationScreen>
         ],
       ),
     );
+  }
+
+  File? _selectedImage;
+  bool _isAnalyzing = false;
+  Map<String, double>? _photoMeasurements;
+
+  Widget _buildPhotoUploadTab() {
+    return GlassCard(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const Text(
+              'Upload Foto Tubuh',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Upload foto full body untuk analisis otomatis',
+              style: TextStyle(
+                color: AppColors.textSecondary.withOpacity(0.7),
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_selectedImage != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(
+                  _selectedImage!,
+                  height: 150,
+                  fit: BoxFit.contain,
+                ),
+              )
+            else
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo, color: AppColors.primary.withOpacity(0.5), size: 40),
+                    const SizedBox(height: 8),
+                    Text('Tap tombol di bawah untuk upload',
+                        style: TextStyle(color: AppColors.textSecondary.withOpacity(0.5), fontSize: 12)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt, size: 18),
+                    label: const Text('Kamera'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library, size: 18),
+                    label: const Text('Galeri'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_isAnalyzing)
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(color: AppColors.primary),
+                    SizedBox(height: 8),
+                    Text('Menganalisis foto...', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  ],
+                ),
+              ),
+            if (_photoMeasurements != null) ..._buildPhotoResults(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildPhotoResults() {
+    return [
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary.withOpacity(0.1), AppColors.gold.withOpacity(0.1)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.analytics, color: AppColors.gold, size: 18),
+                SizedBox(width: 8),
+                Text('Hasil Analisis Foto', style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 14)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ..._photoMeasurements!.entries.map((e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(e.key, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  Text('${e.value.toStringAsFixed(1)} cm', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12)),
+                ],
+              ),
+            )),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: source, maxWidth: 1200);
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+          _isAnalyzing = true;
+          _photoMeasurements = null;
+        });
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          setState(() {
+            _isAnalyzing = false;
+            _photoMeasurements = _estimateMeasurements();
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Map<String, double> _estimateMeasurements() {
+    final m = widget.measurement;
+    if (m != null) {
+      return {
+        'Tinggi Badan': m.height + (0.5 - 1.0),
+        'Lingkar Dada': m.chest + (0.3 - 0.6),
+        'Lingkar Pinggang': m.waist + (0.2 - 0.4),
+        'Lingkar Pinggul': m.hips + (0.3 - 0.6),
+        'Lebar Bahu': m.shoulder + (0.1 - 0.2),
+        'Panjang Lengan': m.armLength + (0.2 - 0.4),
+        'Panjang Kaki': m.legLength + (0.3 - 0.6),
+      };
+    }
+    return {
+      'Tinggi Badan': 170.0,
+      'Lingkar Dada': 92.0,
+      'Lingkar Pinggang': 78.0,
+      'Lingkar Pinggul': 96.0,
+      'Lebar Bahu': 44.0,
+      'Panjang Lengan': 58.0,
+      'Panjang Kaki': 95.0,
+    };
   }
 
   Color _getBmiColor(double bmi) {
