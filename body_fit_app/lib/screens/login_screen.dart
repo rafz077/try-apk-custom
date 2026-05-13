@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   child: const Icon(
-                    Icons.accessibility_new,
+                    Icons.view_in_ar,
                     size: 45,
                     color: Colors.white,
                   ),

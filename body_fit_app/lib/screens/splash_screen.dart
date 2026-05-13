@@ -63,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ],
                 ),
                 child: const Icon(
-                  Icons.accessibility_new,
+                  Icons.view_in_ar,
                   size: 60,
                   color: Colors.white,
                 ),

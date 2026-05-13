@@ -52,8 +52,8 @@ class AppColors {
 }
 
 class AppStrings {
-  static const String appName = 'BodyFit Market';
-  static const String appTagline = 'Stylique Your Perfect Fit';
+  static const String appName = 'Stylique';
+  static const String appTagline = 'AI-Powered Fashion & Perfect Fit';
   static const String trialDays = '7';
   static const String subscriptionPrice = 'Rp 49.000/bulan';
 

@@ -274,7 +274,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _buildBenefit(Icons.accessibility_new, 'Analisis anatomi tubuh'),
+                      _buildBenefit(Icons.view_in_ar, 'Virtual Try-On AI Technology'),
+                      _buildBenefit(Icons.accessibility_new, 'Visualisasi anatomi 3D'),
                       _buildBenefit(
                           Icons.shopping_bag, 'Rekomendasi produk akurat'),
                       _buildBenefit(Icons.store, 'Akses ke 5+ marketplace'),
