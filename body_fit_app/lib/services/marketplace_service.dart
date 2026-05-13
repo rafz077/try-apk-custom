@@ -103,7 +103,6 @@ class MarketplaceService {
     required List<Map<String, dynamic>> items,
   }) {
     final products = <ProductModel>[];
-    final baseUrl = AppStrings.marketplaceBaseUrls[marketplace] ?? '';
 
     for (int i = 0; i < items.length; i++) {
       final item = items[i];
@@ -111,17 +110,19 @@ class MarketplaceService {
       final price = (item['basePrice'] as int) +
           _random.nextInt((item['priceRange'] as int));
 
+      final productName = item['name'] as String;
+      final directUrl = _getDirectProductUrl(marketplace, productName, category);
+
       products.add(ProductModel(
         id: '${marketplace}_${category}_$i',
-        name: '${item['name']} - Size $size',
+        name: '$productName - Size $size',
         description: item['description'] as String,
         category: category,
         price: price.toDouble(),
         size: size,
         marketplace: marketplace,
         imageUrl: _getProductImageUrl(category, i),
-        productUrl:
-            '$baseUrl${Uri.encodeComponent('${item['name']} size $size')}',
+        productUrl: directUrl,
         rating: 3.5 + _random.nextDouble() * 1.5,
         soldCount: _random.nextInt(5000) + 100,
         matchScore: matchScore,
@@ -162,6 +163,40 @@ class MarketplaceService {
     }
 
     return baseScore.clamp(0.0, 1.0);
+  }
+
+  String _getDirectProductUrl(String marketplace, String productName, String category) {
+    final categoryMap = {
+      'Atasan': {'tokopedia': 'pakaian-pria/atasan', 'shopee': 'Pakaian-Pria-cat.11041737', 'lazada': 'baju-pria/', 'bukalapak': 'fashion-pria/atasan-142', 'blibli': 'kategori/pakaian-pria/AT-1000002'},
+      'Bawahan': {'tokopedia': 'pakaian-pria/bawahan', 'shopee': 'Pakaian-Pria-cat.11041737', 'lazada': 'celana-pria/', 'bukalapak': 'fashion-pria/bawahan-143', 'blibli': 'kategori/celana-pria/CE-1000003'},
+      'Sepatu': {'tokopedia': 'sepatu', 'shopee': 'Sepatu-Pria-cat.11041777', 'lazada': 'sepatu-pria/', 'bukalapak': 'sepatu/sepatu-pria-261', 'blibli': 'kategori/sepatu-pria/SE-1000004'},
+      'Jaket & Outer': {'tokopedia': 'pakaian-pria/jaket-coat', 'shopee': 'Pakaian-Pria-cat.11041737', 'lazada': 'jaket-pria/', 'bukalapak': 'fashion-pria/jaket-coat-144', 'blibli': 'kategori/jaket-pria/JA-1000005'},
+      'Pakaian Olahraga': {'tokopedia': 'olahraga/pakaian-olahraga', 'shopee': 'Olahraga-cat.11041819', 'lazada': 'pakaian-olahraga/', 'bukalapak': 'olahraga/pakaian-olahraga-340', 'blibli': 'kategori/pakaian-olahraga/OL-1000006'},
+      'Pakaian Formal': {'tokopedia': 'pakaian-pria/setelan', 'shopee': 'Pakaian-Pria-cat.11041737', 'lazada': 'setelan-pria/', 'bukalapak': 'fashion-pria/setelan-145', 'blibli': 'kategori/setelan-pria/ST-1000007'},
+    };
+
+    final query = Uri.encodeComponent(productName);
+    final catPaths = categoryMap[category];
+    final mpKey = marketplace.toLowerCase();
+
+    switch (marketplace) {
+      case 'Tokopedia':
+        final catPath = catPaths?['tokopedia'] ?? 'search';
+        return 'https://www.tokopedia.com/$catPath?q=$query';
+      case 'Shopee':
+        final catPath = catPaths?['shopee'] ?? '';
+        return 'https://shopee.co.id/search?keyword=$query&$catPath';
+      case 'Lazada':
+        final catPath = catPaths?['lazada'] ?? 'catalog/';
+        return 'https://www.lazada.co.id/$catPath?q=$query';
+      case 'Bukalapak':
+        final catPath = catPaths?['bukalapak'] ?? 'products';
+        return 'https://www.bukalapak.com/$catPath?search%5Bkeywords%5D=$query';
+      case 'Blibli':
+        return 'https://www.blibli.com/cari/$query';
+      default:
+        return 'https://www.google.com/search?q=$query+$mpKey';
+    }
   }
 
   String _getProductImageUrl(String category, int index) {
