@@ -35,7 +35,7 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.97, end: 1.03).animate(
+    _pulseAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
     );
   }
@@ -51,18 +51,21 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            gradient: AppColors.premiumGradient,
-            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1A3A2A), Color(0xFF0D2818)],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.threed_rotation, color: Colors.white, size: 16),
+              Icon(Icons.threed_rotation, color: AppColors.primary, size: 15),
               SizedBox(width: 6),
-              Text('3D View - Geser untuk rotasi',
-                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+              Text('3D Body Scan',
+                  style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
             ],
           ),
         ),
@@ -94,7 +97,7 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
                   ..rotateY(_rotationY),
                 child: CustomPaint(
                   size: const Size(280, 480),
-                  painter: BodyPainter(
+                  painter: HumanBodyPainter(
                     measurement: widget.measurement,
                     highlightPart: _selectedPart ?? widget.highlightPart,
                     pulseValue: _pulseAnimation.value,
@@ -217,219 +220,288 @@ class _BodyVisualizationWidgetState extends State<BodyVisualizationWidget>
   }
 }
 
-class BodyPainter extends CustomPainter {
+class HumanBodyPainter extends CustomPainter {
   final BodyMeasurement? measurement;
   final String? highlightPart;
   final double pulseValue;
   final double rotationY;
 
-  BodyPainter({this.measurement, this.highlightPart, this.pulseValue = 1.0, this.rotationY = 0.0});
+  HumanBodyPainter({this.measurement, this.highlightPart, this.pulseValue = 1.0, this.rotationY = 0.0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final centerX = size.width / 2;
     final scale = size.height / 480;
-    // Apply depth offset based on rotation for 3D effect
-    final depthOffset = sin(rotationY) * 15;
+    final depthOffset = sin(rotationY) * 12;
 
-    final bodyPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          AppColors.primary.withOpacity(0.4),
-          AppColors.primary.withOpacity(0.2),
-          AppColors.emerald.withOpacity(0.3),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-    final outlinePaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final highlightPaint = Paint()
-      ..color = AppColors.gold.withOpacity(0.5)
-      ..style = PaintingStyle.fill;
-
-    final glowPaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.08 * pulseValue)
-      ..style = PaintingStyle.fill
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
-
-    // 3D depth shadow for side-facing elements
-    final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-
-    // Calculate proportions based on measurements
-    double shoulderWidth = 70 * scale;
-    double chestWidth = 60 * scale;
-    double waistWidth = 50 * scale;
-    double hipWidth = 55 * scale;
+    double shoulderW = 70 * scale;
+    double chestW = 60 * scale;
+    double waistW = 48 * scale;
+    double hipW = 56 * scale;
 
     if (measurement != null) {
-      shoulderWidth = (measurement!.shoulder / 2.5) * scale;
-      chestWidth = (measurement!.chest / 3.5) * scale;
-      waistWidth = (measurement!.waist / 3.5) * scale;
-      hipWidth = (measurement!.hips / 3.5) * scale;
+      shoulderW = (measurement!.shoulder / 2.5) * scale;
+      chestW = (measurement!.chest / 3.5) * scale;
+      waistW = (measurement!.waist / 3.5) * scale;
+      hipW = (measurement!.hips / 3.5) * scale;
     }
 
-    // Draw glow behind body
-    canvas.drawOval(
-      Rect.fromCenter(
+    // Background glow
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          AppColors.primary.withOpacity(0.06 * pulseValue),
+          AppColors.primary.withOpacity(0.02),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCenter(
         center: Offset(centerX, size.height * 0.45),
-        width: shoulderWidth * 2.5 * pulseValue,
-        height: size.height * 0.7 * pulseValue,
-      ),
+        width: size.width,
+        height: size.height,
+      ));
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(centerX, size.height * 0.45), width: shoulderW * 3, height: size.height * 0.75),
       glowPaint,
     );
 
-    // Draw 3D depth shadow behind body
+    // 3D depth shadow
     canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(centerX + depthOffset, size.height * 0.45),
-        width: shoulderWidth * 1.8,
-        height: size.height * 0.6,
-      ),
-      shadowPaint,
+      Rect.fromCenter(center: Offset(centerX + depthOffset * 1.5, size.height * 0.48), width: shoulderW * 1.6, height: size.height * 0.55),
+      Paint()
+        ..color = Colors.black.withOpacity(0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
     );
 
-    // Head
-    final headRadius = 25 * scale;
-    final headCenter = Offset(centerX, 35 * scale);
+    // Skin gradient
+    final skinGradient = LinearGradient(
+      colors: [
+        AppColors.primary.withOpacity(0.35),
+        AppColors.primary.withOpacity(0.18),
+        const Color(0xFF00806A).withOpacity(0.25),
+      ],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final bodyFill = Paint()..shader = skinGradient;
+    final bodyOutline = Paint()
+      ..color = AppColors.primary.withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round;
+
+    final highlightFill = Paint()
+      ..color = AppColors.gold.withOpacity(0.35)
+      ..style = PaintingStyle.fill;
+
+    final contourPaint = Paint()
+      ..color = AppColors.primary.withOpacity(0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+
+    // --- HEAD ---
     _drawPart(canvas, 'head', () {
-      canvas.drawCircle(headCenter, headRadius, bodyPaint);
-      canvas.drawCircle(headCenter, headRadius, outlinePaint);
-    }, highlightPaint);
+      final headCx = centerX;
+      final headCy = 32 * scale;
+      final headRx = 22 * scale;
+      final headRy = 26 * scale;
 
-    // Neck
+      canvas.drawOval(Rect.fromCenter(center: Offset(headCx, headCy - 3 * scale), width: headRx * 2.15, height: headRy * 2.1),
+          Paint()..color = AppColors.primary.withOpacity(0.12));
+
+      canvas.drawOval(Rect.fromCenter(center: Offset(headCx, headCy), width: headRx * 2, height: headRy * 2), bodyFill);
+      canvas.drawOval(Rect.fromCenter(center: Offset(headCx, headCy), width: headRx * 2, height: headRy * 2), bodyOutline);
+
+      final facePaint = Paint()..color = AppColors.primary.withOpacity(0.3)..style = PaintingStyle.stroke..strokeWidth = 1.0;
+      canvas.drawOval(Rect.fromCenter(center: Offset(headCx - 7 * scale, headCy - 2 * scale), width: 5 * scale, height: 3 * scale), facePaint);
+      canvas.drawOval(Rect.fromCenter(center: Offset(headCx + 7 * scale, headCy - 2 * scale), width: 5 * scale, height: 3 * scale), facePaint);
+      canvas.drawLine(Offset(headCx, headCy + 2 * scale), Offset(headCx, headCy + 7 * scale), facePaint);
+      final mouthPath = Path()
+        ..moveTo(headCx - 5 * scale, headCy + 11 * scale)
+        ..quadraticBezierTo(headCx, headCy + 14 * scale, headCx + 5 * scale, headCy + 11 * scale);
+      canvas.drawPath(mouthPath, facePaint);
+    }, highlightFill);
+
+    // --- NECK ---
     _drawPart(canvas, 'neck', () {
-      final neckRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-            center: Offset(centerX, 70 * scale),
-            width: 18 * scale,
-            height: 20 * scale),
-        Radius.circular(5 * scale),
-      );
-      canvas.drawRRect(neckRect, bodyPaint);
-      canvas.drawRRect(neckRect, outlinePaint);
-    }, highlightPaint);
+      final neckPath = Path()
+        ..moveTo(centerX - 9 * scale, 58 * scale)
+        ..quadraticBezierTo(centerX - 10 * scale, 72 * scale, centerX - 12 * scale, 82 * scale)
+        ..lineTo(centerX + 12 * scale, 82 * scale)
+        ..quadraticBezierTo(centerX + 10 * scale, 72 * scale, centerX + 9 * scale, 58 * scale)
+        ..close();
+      canvas.drawPath(neckPath, bodyFill);
+      canvas.drawPath(neckPath, bodyOutline);
+      canvas.drawLine(Offset(centerX - 4 * scale, 62 * scale), Offset(centerX - 6 * scale, 78 * scale), contourPaint);
+      canvas.drawLine(Offset(centerX + 4 * scale, 62 * scale), Offset(centerX + 6 * scale, 78 * scale), contourPaint);
+    }, highlightFill);
 
-    // Torso (shoulders to waist)
+    // --- TORSO ---
     _drawPart(canvas, 'chest', () {
       final torsoPath = Path()
-        ..moveTo(centerX - shoulderWidth, 85 * scale)
-        ..lineTo(centerX + shoulderWidth, 85 * scale)
-        ..lineTo(centerX + chestWidth, 150 * scale)
-        ..lineTo(centerX + waistWidth, 220 * scale)
-        ..lineTo(centerX - waistWidth, 220 * scale)
-        ..lineTo(centerX - chestWidth, 150 * scale)
+        ..moveTo(centerX - 12 * scale, 82 * scale)
+        ..quadraticBezierTo(centerX - shoulderW * 0.7, 78 * scale, centerX - shoulderW, 88 * scale)
+        ..quadraticBezierTo(centerX - shoulderW * 0.95, 110 * scale, centerX - chestW, 145 * scale)
+        ..quadraticBezierTo(centerX - chestW * 0.95, 175 * scale, centerX - waistW, 215 * scale)
+        ..lineTo(centerX + waistW, 215 * scale)
+        ..quadraticBezierTo(centerX + chestW * 0.95, 175 * scale, centerX + chestW, 145 * scale)
+        ..quadraticBezierTo(centerX + shoulderW * 0.95, 110 * scale, centerX + shoulderW, 88 * scale)
+        ..quadraticBezierTo(centerX + shoulderW * 0.7, 78 * scale, centerX + 12 * scale, 82 * scale)
         ..close();
-      canvas.drawPath(torsoPath, bodyPaint);
-      canvas.drawPath(torsoPath, outlinePaint);
-    }, highlightPaint);
+      canvas.drawPath(torsoPath, bodyFill);
+      canvas.drawPath(torsoPath, bodyOutline);
 
-    // Hips
+      final pecLeftPath = Path()
+        ..moveTo(centerX - 5 * scale, 95 * scale)
+        ..quadraticBezierTo(centerX - chestW * 0.6, 105 * scale, centerX - chestW * 0.7, 120 * scale);
+      canvas.drawPath(pecLeftPath, contourPaint);
+
+      final pecRightPath = Path()
+        ..moveTo(centerX + 5 * scale, 95 * scale)
+        ..quadraticBezierTo(centerX + chestW * 0.6, 105 * scale, centerX + chestW * 0.7, 120 * scale);
+      canvas.drawPath(pecRightPath, contourPaint);
+
+      canvas.drawLine(Offset(centerX, 92 * scale), Offset(centerX, 210 * scale), contourPaint);
+
+      for (var y = 140.0; y < 200; y += 20) {
+        canvas.drawLine(
+          Offset(centerX - waistW * 0.5, y * scale),
+          Offset(centerX + waistW * 0.5, y * scale),
+          contourPaint,
+        );
+      }
+    }, highlightFill);
+
+    // --- HIPS ---
     _drawPart(canvas, 'hips', () {
       final hipsPath = Path()
-        ..moveTo(centerX - waistWidth, 220 * scale)
-        ..lineTo(centerX + waistWidth, 220 * scale)
-        ..quadraticBezierTo(
-            centerX + hipWidth, 250 * scale, centerX + hipWidth, 270 * scale)
-        ..lineTo(centerX - hipWidth, 270 * scale)
-        ..quadraticBezierTo(
-            centerX - hipWidth, 250 * scale, centerX - waistWidth, 220 * scale)
+        ..moveTo(centerX - waistW, 215 * scale)
+        ..quadraticBezierTo(centerX - hipW * 1.05, 235 * scale, centerX - hipW, 260 * scale)
+        ..lineTo(centerX - hipW * 0.55, 275 * scale)
+        ..lineTo(centerX + hipW * 0.55, 275 * scale)
+        ..lineTo(centerX + hipW, 260 * scale)
+        ..quadraticBezierTo(centerX + hipW * 1.05, 235 * scale, centerX + waistW, 215 * scale)
         ..close();
-      canvas.drawPath(hipsPath, bodyPaint);
-      canvas.drawPath(hipsPath, outlinePaint);
-    }, highlightPaint);
+      canvas.drawPath(hipsPath, bodyFill);
+      canvas.drawPath(hipsPath, bodyOutline);
+      canvas.drawLine(Offset(centerX, 218 * scale), Offset(centerX, 270 * scale), contourPaint);
+    }, highlightFill);
 
-    // Left Arm
+    // --- ARMS ---
     _drawPart(canvas, 'arm', () {
       final leftArmPath = Path()
-        ..moveTo(centerX - shoulderWidth, 90 * scale)
-        ..lineTo(centerX - shoulderWidth - 15 * scale, 90 * scale)
-        ..lineTo(centerX - shoulderWidth - 20 * scale, 200 * scale)
-        ..lineTo(centerX - shoulderWidth - 5 * scale, 200 * scale)
+        ..moveTo(centerX - shoulderW, 88 * scale)
+        ..quadraticBezierTo(centerX - shoulderW - 12 * scale, 95 * scale, centerX - shoulderW - 16 * scale, 130 * scale)
+        ..quadraticBezierTo(centerX - shoulderW - 18 * scale, 160 * scale, centerX - shoulderW - 14 * scale, 195 * scale)
+        ..quadraticBezierTo(centerX - shoulderW - 12 * scale, 210 * scale, centerX - shoulderW - 10 * scale, 215 * scale)
+        ..quadraticBezierTo(centerX - shoulderW - 4 * scale, 210 * scale, centerX - shoulderW - 2 * scale, 195 * scale)
+        ..quadraticBezierTo(centerX - shoulderW - 1 * scale, 160 * scale, centerX - shoulderW + 2 * scale, 130 * scale)
+        ..quadraticBezierTo(centerX - shoulderW + 1 * scale, 100 * scale, centerX - shoulderW + 5 * scale, 92 * scale)
         ..close();
-      canvas.drawPath(leftArmPath, bodyPaint);
-      canvas.drawPath(leftArmPath, outlinePaint);
+      canvas.drawPath(leftArmPath, bodyFill);
+      canvas.drawPath(leftArmPath, bodyOutline);
 
-      // Right Arm
+      final lBicep = Path()
+        ..moveTo(centerX - shoulderW - 6 * scale, 110 * scale)
+        ..quadraticBezierTo(centerX - shoulderW - 10 * scale, 135 * scale, centerX - shoulderW - 8 * scale, 155 * scale);
+      canvas.drawPath(lBicep, contourPaint);
+
       final rightArmPath = Path()
-        ..moveTo(centerX + shoulderWidth, 90 * scale)
-        ..lineTo(centerX + shoulderWidth + 15 * scale, 90 * scale)
-        ..lineTo(centerX + shoulderWidth + 20 * scale, 200 * scale)
-        ..lineTo(centerX + shoulderWidth + 5 * scale, 200 * scale)
+        ..moveTo(centerX + shoulderW, 88 * scale)
+        ..quadraticBezierTo(centerX + shoulderW + 12 * scale, 95 * scale, centerX + shoulderW + 16 * scale, 130 * scale)
+        ..quadraticBezierTo(centerX + shoulderW + 18 * scale, 160 * scale, centerX + shoulderW + 14 * scale, 195 * scale)
+        ..quadraticBezierTo(centerX + shoulderW + 12 * scale, 210 * scale, centerX + shoulderW + 10 * scale, 215 * scale)
+        ..quadraticBezierTo(centerX + shoulderW + 4 * scale, 210 * scale, centerX + shoulderW + 2 * scale, 195 * scale)
+        ..quadraticBezierTo(centerX + shoulderW + 1 * scale, 160 * scale, centerX + shoulderW - 2 * scale, 130 * scale)
+        ..quadraticBezierTo(centerX + shoulderW - 1 * scale, 100 * scale, centerX + shoulderW - 5 * scale, 92 * scale)
         ..close();
-      canvas.drawPath(rightArmPath, bodyPaint);
-      canvas.drawPath(rightArmPath, outlinePaint);
-    }, highlightPaint);
+      canvas.drawPath(rightArmPath, bodyFill);
+      canvas.drawPath(rightArmPath, bodyOutline);
 
-    // Left Leg
+      final rBicep = Path()
+        ..moveTo(centerX + shoulderW + 6 * scale, 110 * scale)
+        ..quadraticBezierTo(centerX + shoulderW + 10 * scale, 135 * scale, centerX + shoulderW + 8 * scale, 155 * scale);
+      canvas.drawPath(rBicep, contourPaint);
+    }, highlightFill);
+
+    // --- LEGS ---
     _drawPart(canvas, 'leg', () {
+      final legInnerX = hipW * 0.55;
+      final legOuterX = hipW * 0.95;
+
       final leftLegPath = Path()
-        ..moveTo(centerX - hipWidth + 5 * scale, 270 * scale)
-        ..lineTo(centerX - 5 * scale, 270 * scale)
-        ..lineTo(centerX - 8 * scale, 400 * scale)
-        ..lineTo(centerX - hipWidth + 8 * scale, 400 * scale)
+        ..moveTo(centerX - legInnerX, 275 * scale)
+        ..lineTo(centerX - legOuterX, 275 * scale)
+        ..quadraticBezierTo(centerX - legOuterX * 1.05, 320 * scale, centerX - legOuterX * 0.85, 360 * scale)
+        ..quadraticBezierTo(centerX - legOuterX * 0.8, 375 * scale, centerX - legOuterX * 0.75, 390 * scale)
+        ..quadraticBezierTo(centerX - legOuterX * 0.7, 410 * scale, centerX - legOuterX * 0.55, 430 * scale)
+        ..lineTo(centerX - legInnerX * 0.6, 430 * scale)
+        ..quadraticBezierTo(centerX - legInnerX * 0.65, 410 * scale, centerX - legInnerX * 0.7, 390 * scale)
+        ..quadraticBezierTo(centerX - legInnerX * 0.75, 370 * scale, centerX - legInnerX * 0.7, 350 * scale)
+        ..quadraticBezierTo(centerX - legInnerX * 0.65, 320 * scale, centerX - legInnerX, 275 * scale)
         ..close();
-      canvas.drawPath(leftLegPath, bodyPaint);
-      canvas.drawPath(leftLegPath, outlinePaint);
+      canvas.drawPath(leftLegPath, bodyFill);
+      canvas.drawPath(leftLegPath, bodyOutline);
 
-      // Right Leg
+      final lKnee = Path()
+        ..moveTo(centerX - legOuterX * 0.9, 365 * scale)
+        ..quadraticBezierTo(centerX - legInnerX * 0.85, 375 * scale, centerX - legInnerX * 0.68, 368 * scale);
+      canvas.drawPath(lKnee, contourPaint);
+
       final rightLegPath = Path()
-        ..moveTo(centerX + 5 * scale, 270 * scale)
-        ..lineTo(centerX + hipWidth - 5 * scale, 270 * scale)
-        ..lineTo(centerX + hipWidth - 8 * scale, 400 * scale)
-        ..lineTo(centerX + 8 * scale, 400 * scale)
+        ..moveTo(centerX + legInnerX, 275 * scale)
+        ..lineTo(centerX + legOuterX, 275 * scale)
+        ..quadraticBezierTo(centerX + legOuterX * 1.05, 320 * scale, centerX + legOuterX * 0.85, 360 * scale)
+        ..quadraticBezierTo(centerX + legOuterX * 0.8, 375 * scale, centerX + legOuterX * 0.75, 390 * scale)
+        ..quadraticBezierTo(centerX + legOuterX * 0.7, 410 * scale, centerX + legOuterX * 0.55, 430 * scale)
+        ..lineTo(centerX + legInnerX * 0.6, 430 * scale)
+        ..quadraticBezierTo(centerX + legInnerX * 0.65, 410 * scale, centerX + legInnerX * 0.7, 390 * scale)
+        ..quadraticBezierTo(centerX + legInnerX * 0.75, 370 * scale, centerX + legInnerX * 0.7, 350 * scale)
+        ..quadraticBezierTo(centerX + legInnerX * 0.65, 320 * scale, centerX + legInnerX, 275 * scale)
         ..close();
-      canvas.drawPath(rightLegPath, bodyPaint);
-      canvas.drawPath(rightLegPath, outlinePaint);
-    }, highlightPaint);
+      canvas.drawPath(rightLegPath, bodyFill);
+      canvas.drawPath(rightLegPath, bodyOutline);
 
-    // Feet
+      final rKnee = Path()
+        ..moveTo(centerX + legOuterX * 0.9, 365 * scale)
+        ..quadraticBezierTo(centerX + legInnerX * 0.85, 375 * scale, centerX + legInnerX * 0.68, 368 * scale);
+      canvas.drawPath(rKnee, contourPaint);
+    }, highlightFill);
+
+    // --- FEET ---
     _drawPart(canvas, 'foot', () {
-      final leftFoot = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(centerX - hipWidth / 2 + 3 * scale, 415 * scale),
-          width: hipWidth * 0.6,
-          height: 18 * scale,
-        ),
-        Radius.circular(8 * scale),
-      );
-      canvas.drawRRect(leftFoot, bodyPaint);
-      canvas.drawRRect(leftFoot, outlinePaint);
+      final leftFootPath = Path()
+        ..moveTo(centerX - hipW * 0.55, 430 * scale)
+        ..lineTo(centerX - hipW * 0.75, 430 * scale)
+        ..quadraticBezierTo(centerX - hipW * 0.85, 432 * scale, centerX - hipW * 0.85, 438 * scale)
+        ..quadraticBezierTo(centerX - hipW * 0.85, 445 * scale, centerX - hipW * 0.6, 446 * scale)
+        ..lineTo(centerX - hipW * 0.35, 446 * scale)
+        ..quadraticBezierTo(centerX - hipW * 0.3, 440 * scale, centerX - hipW * 0.35, 434 * scale)
+        ..close();
+      canvas.drawPath(leftFootPath, bodyFill);
+      canvas.drawPath(leftFootPath, bodyOutline);
 
-      final rightFoot = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(centerX + hipWidth / 2 - 3 * scale, 415 * scale),
-          width: hipWidth * 0.6,
-          height: 18 * scale,
-        ),
-        Radius.circular(8 * scale),
-      );
-      canvas.drawRRect(rightFoot, bodyPaint);
-      canvas.drawRRect(rightFoot, outlinePaint);
-    }, highlightPaint);
+      final rightFootPath = Path()
+        ..moveTo(centerX + hipW * 0.55, 430 * scale)
+        ..lineTo(centerX + hipW * 0.75, 430 * scale)
+        ..quadraticBezierTo(centerX + hipW * 0.85, 432 * scale, centerX + hipW * 0.85, 438 * scale)
+        ..quadraticBezierTo(centerX + hipW * 0.85, 445 * scale, centerX + hipW * 0.6, 446 * scale)
+        ..lineTo(centerX + hipW * 0.35, 446 * scale)
+        ..quadraticBezierTo(centerX + hipW * 0.3, 440 * scale, centerX + hipW * 0.35, 434 * scale)
+        ..close();
+      canvas.drawPath(rightFootPath, bodyFill);
+      canvas.drawPath(rightFootPath, bodyOutline);
+    }, highlightFill);
 
-    // Draw measurement labels if measurements exist
     if (measurement != null) {
-      _drawMeasurementLabels(canvas, size, centerX, scale, shoulderWidth,
-          chestWidth, waistWidth, hipWidth);
+      _drawMeasurementLabels(canvas, size, centerX, scale, shoulderW, chestW, waistW, hipW);
     }
   }
 
-  void _drawPart(Canvas canvas, String partName, VoidCallback drawFunc,
-      Paint highlightPaint) {
+  void _drawPart(Canvas canvas, String partName, VoidCallback drawFunc, Paint highlightPaint) {
     if (highlightPart == partName) {
-      final savedPaint = Paint()..color = highlightPaint.color;
-      canvas.save();
       drawFunc();
-      canvas.restore();
-      // Draw highlight overlay
-      canvas.saveLayer(null, savedPaint);
+      canvas.saveLayer(null, highlightPaint);
       drawFunc();
       canvas.restore();
     } else {
@@ -439,36 +511,43 @@ class BodyPainter extends CustomPainter {
 
   void _drawMeasurementLabels(Canvas canvas, Size size, double centerX,
       double scale, double sw, double cw, double ww, double hw) {
-    final textStyle = TextStyle(
-      color: AppColors.gold,
-      fontSize: 9 * scale,
-      fontWeight: FontWeight.w600,
-    );
+    final labelBg = Paint()
+      ..color = const Color(0xFF1A1A2E).withOpacity(0.85)
+      ..style = PaintingStyle.fill;
 
     void drawLabel(String text, Offset position) {
-      final textSpan = TextSpan(text: text, style: textStyle);
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
+      final textSpan = TextSpan(
+        text: text,
+        style: TextStyle(color: AppColors.gold, fontSize: 9 * scale, fontWeight: FontWeight.w600),
       );
+      final textPainter = TextPainter(text: textSpan, textDirection: TextDirection.ltr);
       textPainter.layout();
+
+      final bgRect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(position.dx - 3, position.dy - 2, textPainter.width + 6, textPainter.height + 4),
+        const Radius.circular(4),
+      );
+      canvas.drawRRect(bgRect, labelBg);
+
+      final lineStart = Offset(position.dx - 3, position.dy + textPainter.height / 2);
+      final lineEnd = Offset(centerX + sw - 5, position.dy + textPainter.height / 2);
+      canvas.drawLine(lineStart, lineEnd, Paint()
+        ..color = AppColors.gold.withOpacity(0.3)
+        ..strokeWidth = 0.8);
+
       textPainter.paint(canvas, position);
     }
 
     if (measurement != null) {
-      drawLabel('${measurement!.shoulder}cm',
-          Offset(centerX + sw + 5 * scale, 85 * scale));
-      drawLabel('${measurement!.chest}cm',
-          Offset(centerX + cw + 5 * scale, 140 * scale));
-      drawLabel('${measurement!.waist}cm',
-          Offset(centerX + ww + 5 * scale, 215 * scale));
-      drawLabel('${measurement!.hips}cm',
-          Offset(centerX + hw + 5 * scale, 265 * scale));
+      drawLabel('${measurement!.shoulder}cm', Offset(centerX + sw + 8 * scale, 85 * scale));
+      drawLabel('${measurement!.chest}cm', Offset(centerX + cw + 8 * scale, 140 * scale));
+      drawLabel('${measurement!.waist}cm', Offset(centerX + ww + 8 * scale, 215 * scale));
+      drawLabel('${measurement!.hips}cm', Offset(centerX + hw + 8 * scale, 260 * scale));
     }
   }
 
   @override
-  bool shouldRepaint(covariant BodyPainter oldDelegate) {
+  bool shouldRepaint(covariant HumanBodyPainter oldDelegate) {
     return oldDelegate.highlightPart != highlightPart ||
         oldDelegate.pulseValue != pulseValue ||
         oldDelegate.rotationY != rotationY;

@@ -159,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             builder: (_) => const SubscriptionScreen()),
                       );
                     },
-                    icon: Icons.star,
+                    icon: Icons.workspace_premium,
                   ),
                 ],
               ],

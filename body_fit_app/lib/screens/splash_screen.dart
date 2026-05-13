@@ -79,9 +79,9 @@ class _SplashScreenState extends State<SplashScreen> {
                   .shimmer(duration: 1200.ms),
               const SizedBox(height: 30),
               // App Name
-              Text(
+              const Text(
                 AppStrings.appName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,

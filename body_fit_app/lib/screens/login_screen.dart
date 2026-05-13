@@ -86,22 +86,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 // Logo
                 Container(
-                  width: 90,
-                  height: 90,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(25),
+                    gradient: AppColors.premiumGradient,
+                    borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
                   child: const Icon(
                     Icons.view_in_ar,
-                    size: 45,
+                    size: 40,
                     color: Colors.white,
                   ),
                 ).animate().scale(
@@ -110,21 +110,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       duration: 600.ms,
                       curve: Curves.elasticOut,
                     ),
-                const SizedBox(height: 24),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   AppStrings.appName,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
+                    letterSpacing: 1.5,
                   ),
                 ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  'Masuk ke akun Anda',
+                  AppStrings.appTagline,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontSize: 13,
+                    color: AppColors.textSecondary.withOpacity(0.6),
+                    letterSpacing: 0.5,
                   ),
                 ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
                 const SizedBox(height: 40),

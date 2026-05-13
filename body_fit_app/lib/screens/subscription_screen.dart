@@ -5,6 +5,7 @@ import '../utils/constants.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/custom_button.dart';
 import 'home_screen.dart';
+import 'payment_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -15,7 +16,7 @@ class SubscriptionScreen extends StatefulWidget {
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   int _selectedPlan = 1;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   final List<Map<String, dynamic>> _plans = [
     {
@@ -62,30 +63,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   ];
 
   Future<void> _subscribe() async {
-    setState(() => _isLoading = true);
+    final plan = _plans[_selectedPlan];
+    final planName = plan['name'] as String;
+    final planPrice = plan['price'] as String;
 
-    final planName = _plans[_selectedPlan]['name'] as String;
-    final result = await AuthService().subscribe(planName);
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] as String),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PaymentScreen(planName: planName, planPrice: planPrice),
+      ),
+    );
   }
 
   @override
@@ -340,11 +327,51 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
                 const SizedBox(height: 20),
 
+                // Premium benefits
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.gold.withOpacity(0.1),
+                        AppColors.primary.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.gold.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.workspace_premium, color: AppColors.gold, size: 22),
+                          SizedBox(width: 8),
+                          Text(
+                            'Keuntungan Premium',
+                            style: TextStyle(color: AppColors.gold, fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      _buildBenefitItem(Icons.view_in_ar, 'Virtual Try-On & Visualisasi 3D'),
+                      _buildBenefitItem(Icons.analytics, 'Analisis Ukuran Tubuh Otomatis'),
+                      _buildBenefitItem(Icons.store, 'Akses 5 Marketplace Sekaligus'),
+                      _buildBenefitItem(Icons.auto_awesome, 'Rekomendasi Produk Personal'),
+                      _buildBenefitItem(Icons.camera_alt, 'Upload Foto & Scan Tubuh'),
+                      _buildBenefitItem(Icons.history, 'Riwayat & Tracking Pengukuran'),
+                      _buildBenefitItem(Icons.support_agent, 'Prioritas Customer Support'),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 750.ms, duration: 500.ms),
+
+                const SizedBox(height: 20),
+
                 GradientButton(
-                  text: 'Berlangganan Sekarang',
+                  text: 'Lanjutkan ke Pembayaran',
                   onPressed: _subscribe,
                   isLoading: _isLoading,
-                  icon: Icons.star,
+                  icon: Icons.payment,
                 ).animate().fadeIn(delay: 800.ms, duration: 500.ms),
 
                 const SizedBox(height: 12),
@@ -373,6 +400,29 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBenefitItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+        ],
       ),
     );
   }

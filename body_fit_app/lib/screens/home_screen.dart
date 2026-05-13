@@ -98,20 +98,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           onTap: (index) => setState(() => _currentIndex = index),
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              label: 'Dashboard',
+              icon: Icon(Icons.space_dashboard_outlined),
+              activeIcon: Icon(Icons.space_dashboard),
+              label: 'Beranda',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.accessibility_new),
-              label: 'Body',
+              icon: Icon(Icons.accessibility_new_outlined),
+              activeIcon: Icon(Icons.accessibility_new),
+              label: 'Visualisasi',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag),
-              label: 'Produk',
+              icon: Icon(Icons.storefront_outlined),
+              activeIcon: Icon(Icons.storefront),
+              label: 'Katalog',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profil',
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Akun',
             ),
           ],
         ),
@@ -164,23 +168,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // Header
           Row(
             children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: AppColors.premiumGradient,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    (user?.name ?? 'S')[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Halo, ${user?.name ?? 'User'}! 👋',
+                    'Halo, ${user?.name ?? 'User'}!',
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     AppStrings.appTagline,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary.withOpacity(0.8),
+                      fontSize: 12,
+                      color: AppColors.textSecondary.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -332,13 +351,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           const SizedBox(height: 24),
 
           // Quick actions
-          const Text(
-            'Menu Cepat',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            children: [
+              const Text(
+                'Fitur Utama',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Stylique',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary.withOpacity(0.5),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
           const SizedBox(height: 12),
           GridView.count(
@@ -363,22 +396,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 },
               ),
               _buildMenuCard(
-                'Visualisasi',
-                Icons.accessibility_new,
+                'Body Scan 3D',
+                Icons.view_in_ar,
                 AppColors.secondary,
                 () => setState(() => _currentIndex = 1),
               ),
               _buildMenuCard(
-                'Cari Produk',
-                Icons.search,
+                'Katalog Produk',
+                Icons.storefront,
                 AppColors.accent,
                 () => setState(() => _currentIndex = 2),
               ),
               _buildMenuCard(
-                'Marketplace',
-                Icons.store,
-                Colors.tealAccent,
-                () => setState(() => _currentIndex = 2),
+                'Berlangganan',
+                Icons.workspace_premium,
+                AppColors.gold,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                  );
+                },
               ),
             ],
           )
