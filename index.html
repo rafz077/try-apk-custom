@@ -398,6 +398,38 @@ img{max-width:100%;display:block}
 @media(min-width:769px){
   .player-btn-play-mobile{display:none}
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   INSTALL APP DIALOG
+   ═══════════════════════════════════════════════════════════════ */
+.install-dialog{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}
+.install-dialog.visible{opacity:1;visibility:visible}
+.install-dialog-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.install-dialog-card{position:relative;background:var(--bg-charcoal);border:1px solid var(--border-glow);border-radius:var(--radius-lg);padding:28px;max-width:420px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 40px rgba(30,215,96,0.08);animation:dialogSlideUp .4s ease}
+@keyframes dialogSlideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.install-dialog-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;position:relative}
+.install-dialog-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--pink),var(--lavender));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0}
+.install-dialog-header h3{font-size:16px;font-weight:700;margin-bottom:2px}
+.install-dialog-header p{font-size:12px;color:var(--text-muted)}
+.install-dialog-close{position:absolute;top:-4px;right:-4px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);transition:var(--transition)}
+.install-dialog-close:hover{background:rgba(255,255,255,0.12);color:var(--text-white)}
+.install-dialog-features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.install-feature{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.03);border:1px solid var(--border);transition:var(--transition)}
+.install-feature:hover{border-color:var(--border-glow);background:rgba(255,255,255,0.05)}
+.install-feature-icon{font-size:20px;margin-bottom:4px}
+.install-feature span:nth-child(2){font-size:12px;font-weight:600}
+.install-feature-desc{font-size:10px;color:var(--text-muted)}
+.install-dialog-actions{display:flex;flex-direction:column;gap:8px}
+.install-btn-primary{padding:12px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--neon),#17c955);color:#000;font-size:14px;font-weight:700;transition:var(--transition);letter-spacing:.3px}
+.install-btn-primary:hover{transform:scale(1.02);box-shadow:0 4px 20px var(--neon-glow)}
+.install-btn-later{padding:10px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.06);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text-soft);transition:var(--transition)}
+.install-btn-later:hover{background:rgba(255,255,255,0.1);color:var(--text-white)}
+.install-btn-dismiss{padding:8px;font-size:12px;color:var(--text-muted);transition:var(--transition)}
+.install-btn-dismiss:hover{color:var(--text-soft)}
+@media(max-width:480px){
+  .install-dialog-card{padding:20px;margin:12px}
+  .install-dialog-features{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -709,6 +741,32 @@ img{max-width:100%;display:block}
 
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══ INSTALL APP DIALOG ═══ -->
+<div class="install-dialog" id="installDialog">
+  <div class="install-dialog-backdrop" onclick="installDismiss()"></div>
+  <div class="install-dialog-card">
+    <div class="install-dialog-header">
+      <div class="install-dialog-icon">75</div>
+      <div>
+        <h3>Install The 1975 - rafztry</h3>
+        <p>Akses lebih cepat langsung dari home screen</p>
+      </div>
+      <button class="install-dialog-close" onclick="installDismiss()" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="install-dialog-features">
+      <div class="install-feature"><span class="install-feature-icon">&#9889;</span><span>Akses Instan</span><span class="install-feature-desc">Buka langsung tanpa browser</span></div>
+      <div class="install-feature"><span class="install-feature-icon">&#127925;</span><span>Full Player</span><span class="install-feature-desc">Musik player lengkap</span></div>
+      <div class="install-feature"><span class="install-feature-icon">&#128241;</span><span>Mobile Friendly</span><span class="install-feature-desc">Tampilan app native</span></div>
+      <div class="install-feature"><span class="install-feature-icon">&#128268;</span><span>Offline Ready</span><span class="install-feature-desc">Bisa diakses tanpa internet</span></div>
+    </div>
+    <div class="install-dialog-actions">
+      <button class="install-btn-primary" onclick="installAccept()">&#11015; Install Sekarang</button>
+      <button class="install-btn-later" onclick="installRemindLater()">&#128340; Nanti Saja</button>
+      <button class="install-btn-dismiss" onclick="installDismiss()">Tidak, Terima Kasih</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
@@ -1497,19 +1555,76 @@ function showToast(msg){
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PWA / INSTALL PROMPT
+   PWA / INSTALL PROMPT — Auto-request + User Choice
    ═══════════════════════════════════════════════════════════════ */
 let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;});
-function handleInstall(){
+let installDismissedByUser=false;
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  // Auto-show install dialog after 5 seconds if user hasn't dismissed
+  if(!installDismissedByUser && !localStorage.getItem('pwa-install-dismissed')){
+    setTimeout(()=>showInstallDialog(),5000);
+  }
+});
+
+window.addEventListener('appinstalled',()=>{
+  showToast('&#10003; App berhasil di-install!');
+  hideInstallDialog();
+  deferredPrompt=null;
+  localStorage.setItem('pwa-installed','true');
+});
+
+function showInstallDialog(){
+  if(!deferredPrompt) return;
+  const d=document.getElementById('installDialog');
+  if(d) d.classList.add('visible');
+}
+
+function hideInstallDialog(){
+  const d=document.getElementById('installDialog');
+  if(d) d.classList.remove('visible');
+}
+
+function installAccept(){
   if(deferredPrompt){
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(r=>{
-      showToast(r.outcome==='accepted'?'App installed!':'Install dismissed');
+      if(r.outcome==='accepted'){
+        showToast('&#10003; Installing app...');
+      }else{
+        showToast('Install dibatalkan');
+      }
       deferredPrompt=null;
+      hideInstallDialog();
     });
+  }
+}
+
+function installDismiss(){
+  installDismissedByUser=true;
+  localStorage.setItem('pwa-install-dismissed','true');
+  hideInstallDialog();
+  showToast('Anda bisa install kapan saja lewat tombol Download App');
+}
+
+function installRemindLater(){
+  hideInstallDialog();
+  // Re-show after 2 minutes
+  setTimeout(()=>{
+    if(deferredPrompt && !installDismissedByUser) showInstallDialog();
+  },120000);
+  showToast('Akan diingatkan lagi nanti');
+}
+
+function handleInstall(){
+  if(deferredPrompt){
+    showInstallDialog();
+  }else if(localStorage.getItem('pwa-installed')){
+    showToast('App sudah ter-install!');
   }else{
-    showToast('Add this page to your home screen to install');
+    showToast('Tambahkan halaman ini ke home screen untuk install');
   }
 }
 
@@ -1535,10 +1650,10 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   OFFLINE FALLBACK
+   SERVICE WORKER & OFFLINE
    ═══════════════════════════════════════════════════════════════ */
 if('serviceWorker' in navigator){
-  // <!-- SW: Create a service-worker.js for full offline support -->
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
 </body>
