@@ -430,6 +430,19 @@ img{max-width:100%;display:block}
   .install-dialog-card{padding:20px;margin:12px}
   .install-dialog-features{grid-template-columns:1fr}
 }
+/* ═══ SPOTIFY EMBED STYLES ═══ */
+.spotify-embed-wrap{margin-top:16px;padding:12px;border-radius:var(--radius);background:rgba(30,215,96,0.04);border:1px solid rgba(30,215,96,0.15);transition:var(--transition)}
+.spotify-embed-wrap:hover{border-color:rgba(30,215,96,0.3)}
+.spotify-embed-label{font-size:11px;font-weight:600;color:var(--neon);margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase}
+.spotify-mode-toggle{margin-top:12px;display:flex;justify-content:center}
+.spotify-toggle-btn{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;color:var(--text-muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);transition:var(--transition);cursor:pointer;display:flex;align-items:center;gap:6px}
+.spotify-toggle-btn.active{color:var(--neon);border-color:rgba(30,215,96,0.3);background:rgba(30,215,96,0.08)}
+.spotify-toggle-btn:hover{background:rgba(30,215,96,0.12);color:var(--neon)}
+.spotify-icon{font-size:14px}
+.track-spotify-badge{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;border-radius:50%;background:rgba(30,215,96,0.15);color:var(--neon);margin-left:4px;vertical-align:middle}
+.player-spotify-indicator{display:none;align-items:center;gap:4px;font-size:10px;color:var(--neon);font-weight:600;letter-spacing:.3px;margin-top:2px}
+.player-spotify-indicator.visible{display:flex}
+.player-spotify-indicator span{font-size:12px}
 </style>
 </head>
 <body>
@@ -669,6 +682,16 @@ img{max-width:100%;display:block}
         <div class="np-artist" id="npArtist">The 1975</div>
         <div class="np-album-name" id="npAlbum"></div>
         <div class="np-meta" id="npMeta"></div>
+        <!-- Spotify Embed Player -->
+        <div class="spotify-embed-wrap" id="spotifyEmbedWrap" style="display:none">
+          <div class="spotify-embed-label">&#127911; Spotify Player</div>
+          <iframe id="spotifyEmbed" style="border-radius:12px" width="100%" height="152" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>
+        <div class="spotify-mode-toggle" id="spotifyModeToggle">
+          <button class="spotify-toggle-btn active" id="btnSpotifyMode" onclick="toggleSpotifyMode()" title="Toggle Spotify playback">
+            <span class="spotify-icon">&#127911;</span> Spotify
+          </button>
+        </div>
       </div>
       <!-- Lyrics -->
       <div class="right-section" id="rtab-lyrics">
@@ -695,6 +718,7 @@ img{max-width:100%;display:block}
       <div class="player-track-info">
         <h4 id="playerTitle">No Track Playing</h4>
         <p id="playerArtist">The 1975</p>
+        <div class="player-spotify-indicator" id="playerSpotifyIndicator"><span>&#127911;</span> SPOTIFY</div>
       </div>
       <button class="player-like" id="playerLike" onclick="toggleLike()" aria-label="Like">&#9825;</button>
     </div>
@@ -772,27 +796,35 @@ img{max-width:100%;display:block}
 /* ═══════════════════════════════════════════════════════════════
    DATA: ALBUMS, TRACKS, PLAYLISTS
    ═══════════════════════════════════════════════════════════════ */
+/* Spotify Album IDs for embed fallback */
+const SPOTIFY_ALBUMS = {
+  0:'33ZqJmmqFE8Z7Ak1Lxbnfb',
+  1:'1JFmNyVPdBF1ECvv4fhpW4',
+  2:'6PWXKiakqhI17mTYM4y6oY',
+  3:'0o5xjCboti8vXhdoUG9LYi',
+  4:'6dVCpQ7oGJD1oYs2fv1t5M'
+};
 const ALBUMS = [
   {
     id: 0, title: 'The 1975', year: 2013, mood: 'Monochrome indie pop, youth, night drive',
     coverClass: 'album-cover-1', trackCount: 16, duration: '~62 min',
     tracks: [
-      {t:'The 1975',d:'4:12',mood:'ambient intro'},
-      {t:'The City',d:'3:18',mood:'driving indie'},
-      {t:'M.O.N.E.Y.',d:'3:53',mood:'nocturnal groove'},
-      {t:'Chocolate',d:'3:52',mood:'youthful rebellion'},
-      {t:'Sex',d:'4:22',mood:'raw desire'},
-      {t:'Talk!',d:'3:41',mood:'restless energy'},
-      {t:'An Encounter',d:'2:38',mood:'soft interlude'},
-      {t:'Heart Out',d:'4:10',mood:'heart-racing pop'},
-      {t:'Settle Down',d:'4:32',mood:'bittersweet youth'},
-      {t:'Robbers',d:'4:15',mood:'cinematic romance'},
-      {t:'Girls',d:'5:15',mood:'carefree vibes'},
-      {t:'12',d:'2:56',mood:'wistful reflection'},
-      {t:'She Way Out',d:'3:42',mood:'bright pop'},
-      {t:'Menswear',d:'5:58',mood:'stream of consciousness'},
-      {t:'Pressure',d:'3:50',mood:'anxious energy'},
-      {t:'Is There Somebody Who Can Watch You',d:'3:23',mood:'tender farewell'}
+      {t:'The 1975',d:'4:12',mood:'ambient intro',sid:''},
+      {t:'The City',d:'3:18',mood:'driving indie',sid:'0bmJ2sqxKOk0l36Ctd0Fcs'},
+      {t:'M.O.N.E.Y.',d:'3:53',mood:'nocturnal groove',sid:''},
+      {t:'Chocolate',d:'3:52',mood:'youthful rebellion',sid:'44Ljlpy44mHvLJxcYUvTK0'},
+      {t:'Sex',d:'4:22',mood:'raw desire',sid:'0wIFAHbaUucA8mog7Y2IDD'},
+      {t:'Talk!',d:'3:41',mood:'restless energy',sid:''},
+      {t:'An Encounter',d:'2:38',mood:'soft interlude',sid:''},
+      {t:'Heart Out',d:'4:10',mood:'heart-racing pop',sid:'424ml6U1wmEarzw26uDtCS'},
+      {t:'Settle Down',d:'4:32',mood:'bittersweet youth',sid:'36YLqJHsNHHODwX5gDPEBb'},
+      {t:'Robbers',d:'4:15',mood:'cinematic romance',sid:'7aHx437dgnClpc32kdt2wk'},
+      {t:'Girls',d:'5:15',mood:'carefree vibes',sid:'5WSdMcWTKRdN1QYVJHJWxz'},
+      {t:'12',d:'2:56',mood:'wistful reflection',sid:''},
+      {t:'She Way Out',d:'3:42',mood:'bright pop',sid:'4XVaKcjTMKPY1z5x9fCBbp'},
+      {t:'Menswear',d:'5:58',mood:'stream of consciousness',sid:'1v07ywlVYd02pOCnXRBDNA'},
+      {t:'Pressure',d:'3:50',mood:'anxious energy',sid:'3W4xpnA5BVg9qduchV1mQy'},
+      {t:'Is There Somebody Who Can Watch You',d:'3:23',mood:'tender farewell',sid:''}
     ]
   },
   {
@@ -800,23 +832,23 @@ const ALBUMS = [
     mood: 'Pink neon, glossy synth-pop, cinematic romance',
     coverClass: 'album-cover-2', trackCount: 17, duration: '~74 min',
     tracks: [
-      {t:'The 1975',d:'1:19',mood:'ambient overture'},
-      {t:'Love Me',d:'4:22',mood:'self-aware glamour'},
-      {t:'UGH!',d:'3:27',mood:'funky angst'},
-      {t:'A Change of Heart',d:'5:08',mood:'melancholic pop'},
-      {t:"She's American",d:'4:11',mood:'infatuated charm'},
-      {t:'If I Believe You',d:'6:07',mood:'spiritual questioning'},
-      {t:'Please Be Naked',d:'5:28',mood:'ambient beauty'},
-      {t:'Lostmyhead',d:'5:14',mood:'ethereal noise'},
-      {t:'The Ballad of Me and My Brain',d:'4:02',mood:'chaotic vulnerability'},
-      {t:'Somebody Else',d:'5:47',mood:'heartbreak anthem'},
-      {t:'Loving Someone',d:'4:15',mood:'political pop'},
-      {t:'I Like It When You Sleep...',d:'5:30',mood:'dreamy ambient'},
-      {t:'The Sound',d:'3:55',mood:'euphoric pop'},
-      {t:'This Must Be My Dream',d:'4:16',mood:'hazy desire'},
-      {t:'Paris',d:'4:54',mood:'romantic escape'},
-      {t:'Nana',d:'3:19',mood:'tender grief'},
-      {t:'She Lays Down',d:'3:43',mood:'fragile acoustic'}
+      {t:'The 1975',d:'1:19',mood:'ambient overture',sid:'4ZEvWpjUBtL9gjVIzB2Wbr'},
+      {t:'Love Me',d:'4:22',mood:'self-aware glamour',sid:'5hRzAbY2AAO258hL6oqsqO'},
+      {t:'UGH!',d:'3:27',mood:'funky angst',sid:'5vgdeMt4uKUN2BeltZjoDh'},
+      {t:'A Change of Heart',d:'5:08',mood:'melancholic pop',sid:'035QPHPAcqApSGMMcogT45'},
+      {t:"She's American",d:'4:11',mood:'infatuated charm',sid:'51cd3bzVmLAjlnsSZn4ecW'},
+      {t:'If I Believe You',d:'6:07',mood:'spiritual questioning',sid:'2J3ajGI1sVj9wnqThJHwPS'},
+      {t:'Please Be Naked',d:'5:28',mood:'ambient beauty',sid:'0UyfKV5iafZCCtQxRBbe85'},
+      {t:'Lostmyhead',d:'5:14',mood:'ethereal noise',sid:'37PSljWwMyg3JhqWma3Wai'},
+      {t:'The Ballad of Me and My Brain',d:'4:02',mood:'chaotic vulnerability',sid:'54XGKvGZwA7xB3Uu5vef0C'},
+      {t:'Somebody Else',d:'5:47',mood:'heartbreak anthem',sid:'5hc71nKsUgtwQ3z52KEKQk'},
+      {t:'Loving Someone',d:'4:15',mood:'political pop',sid:'4p1pxmqtPtPHqWbOd2RgXu'},
+      {t:'I Like It When You Sleep...',d:'5:30',mood:'dreamy ambient',sid:''},
+      {t:'The Sound',d:'3:55',mood:'euphoric pop',sid:'5vrusVExLfU8ntUykEEDhs'},
+      {t:'This Must Be My Dream',d:'4:16',mood:'hazy desire',sid:'6OPOa3qlKoDUzGpS8MrcLi'},
+      {t:'Paris',d:'4:54',mood:'romantic escape',sid:''},
+      {t:'Nana',d:'3:19',mood:'tender grief',sid:''},
+      {t:'She Lays Down',d:'3:43',mood:'fragile acoustic',sid:'7Esd9ROfkgPgBtWN72U5P5'}
     ]
   },
   {
@@ -824,21 +856,21 @@ const ALBUMS = [
     mood: 'Digital age, jazz-pop, emotional complexity',
     coverClass: 'album-cover-3', trackCount: 15, duration: '~57 min',
     tracks: [
-      {t:'The 1975',d:'0:46',mood:'spoken word'},
-      {t:'Give Yourself a Try',d:'3:27',mood:'punk clarity'},
-      {t:"TOOTIMETOOTIMETOOTIME",d:'3:05',mood:'digital bounce'},
-      {t:'How to Draw / Petrichor',d:'5:52',mood:'ambient jazz'},
-      {t:'Love It If We Made It',d:'4:14',mood:'protest anthem'},
-      {t:'Be My Mistake',d:'3:48',mood:'regretful acoustic'},
-      {t:'Sincerity Is Scary',d:'4:07',mood:'gospel pop'},
-      {t:'I Like America & America Likes Me',d:'3:47',mood:'auto-tune elegy'},
-      {t:'The Man Who Married a Robot',d:'2:05',mood:'spoken AI fable'},
-      {t:'Inside Your Mind',d:'3:14',mood:'gentle introspection'},
-      {t:'It\'s Not Living (If It\'s Not with You)',d:'4:10',mood:'addiction pop'},
-      {t:'Surrounded by Heads and Bodies',d:'4:07',mood:'ambient noise'},
-      {t:'Mine',d:'4:18',mood:'pure love'},
-      {t:'I Couldn\'t Be More in Love',d:'5:16',mood:'sweeping romance'},
-      {t:'I Always Wanna Die (Sometimes)',d:'5:51',mood:'epic closer'}
+      {t:'The 1975',d:'0:46',mood:'spoken word',sid:''},
+      {t:'Give Yourself a Try',d:'3:27',mood:'punk clarity',sid:'4rmIfFUZhhi9sS5IYtpkXw'},
+      {t:"TOOTIMETOOTIMETOOTIME",d:'3:05',mood:'digital bounce',sid:'33DzKnwuBE6lfOiADwzd5E'},
+      {t:'How to Draw / Petrichor',d:'5:52',mood:'ambient jazz',sid:''},
+      {t:'Love It If We Made It',d:'4:14',mood:'protest anthem',sid:'6WmIyn2fx1PKQ0XDpYj4VR'},
+      {t:'Be My Mistake',d:'3:48',mood:'regretful acoustic',sid:''},
+      {t:'Sincerity Is Scary',d:'4:07',mood:'gospel pop',sid:'6HguG9HRb1Ke1bhihfE4m8'},
+      {t:'I Like America & America Likes Me',d:'3:47',mood:'auto-tune elegy',sid:''},
+      {t:'The Man Who Married a Robot',d:'2:05',mood:'spoken AI fable',sid:''},
+      {t:'Inside Your Mind',d:'3:14',mood:'gentle introspection',sid:''},
+      {t:'It\'s Not Living (If It\'s Not with You)',d:'4:10',mood:'addiction pop',sid:'3TgMcrV32NUKjEG2ujn9eh'},
+      {t:'Surrounded by Heads and Bodies',d:'4:07',mood:'ambient noise',sid:''},
+      {t:'Mine',d:'4:18',mood:'pure love',sid:''},
+      {t:'I Couldn\'t Be More in Love',d:'5:16',mood:'sweeping romance',sid:''},
+      {t:'I Always Wanna Die (Sometimes)',d:'5:51',mood:'epic closer',sid:'7iPlcFvOMOzt6v0QvcAueZ'}
     ]
   },
   {
@@ -846,20 +878,20 @@ const ALBUMS = [
     mood: 'Eclectic experiments, genre-fluid, introspective',
     coverClass: 'album-cover-4', trackCount: 14, duration: '~80 min',
     tracks: [
-      {t:'The 1975',d:'4:41',mood:'Greta speech'},
-      {t:'People',d:'3:11',mood:'punk explosion'},
-      {t:'The End (Music for Cars)',d:'2:38',mood:'cinematic ambient'},
-      {t:'Frail State of Mind',d:'4:07',mood:'anxious electronica'},
-      {t:'Streaming',d:'2:13',mood:'glitchy interlude'},
-      {t:'The Birthday Party',d:'5:13',mood:'folk storytelling'},
-      {t:'Yeah I Know',d:'0:36',mood:'punk flash'},
-      {t:'Then Because She Goes',d:'3:10',mood:'shoegaze drift'},
-      {t:'Jesus Christ 2005 God Bless America',d:'4:31',mood:'Americana gospel'},
-      {t:'Roadkill',d:'4:10',mood:'country crossover'},
-      {t:'Me & You Together Song',d:'3:30',mood:'indie pop joy'},
-      {t:'Nothing Revealed / Everything Denied',d:'4:33',mood:'introspective'},
-      {t:'Tonight (I Wish I Was Your Boy)',d:'3:41',mood:'80s synth pop'},
-      {t:'Guys',d:'4:12',mood:'friendship anthem'}
+      {t:'The 1975',d:'4:41',mood:'Greta speech',sid:''},
+      {t:'People',d:'3:11',mood:'punk explosion',sid:''},
+      {t:'The End (Music for Cars)',d:'2:38',mood:'cinematic ambient',sid:''},
+      {t:'Frail State of Mind',d:'4:07',mood:'anxious electronica',sid:''},
+      {t:'Streaming',d:'2:13',mood:'glitchy interlude',sid:''},
+      {t:'The Birthday Party',d:'5:13',mood:'folk storytelling',sid:''},
+      {t:'Yeah I Know',d:'0:36',mood:'punk flash',sid:''},
+      {t:'Then Because She Goes',d:'3:10',mood:'shoegaze drift',sid:''},
+      {t:'Jesus Christ 2005 God Bless America',d:'4:31',mood:'Americana gospel',sid:''},
+      {t:'Roadkill',d:'4:10',mood:'country crossover',sid:''},
+      {t:'Me & You Together Song',d:'3:30',mood:'indie pop joy',sid:'6SrvijeageGUiFu9iCDdmM'},
+      {t:'Nothing Revealed / Everything Denied',d:'4:33',mood:'introspective',sid:''},
+      {t:'Tonight (I Wish I Was Your Boy)',d:'3:41',mood:'80s synth pop',sid:''},
+      {t:'Guys',d:'4:12',mood:'friendship anthem',sid:''}
     ]
   },
   {
@@ -867,17 +899,17 @@ const ALBUMS = [
     mood: 'Warm analog, romantic, refined pop',
     coverClass: 'album-cover-5', trackCount: 11, duration: '~43 min',
     tracks: [
-      {t:'About You',d:'5:17',mood:'nostalgic longing'},
-      {t:'The 1975',d:'3:28',mood:'playful self-reference'},
-      {t:'Happiness',d:'5:02',mood:'bittersweet euphoria'},
-      {t:'Looking for Somebody (To Love)',d:'3:27',mood:'upbeat desire'},
-      {t:'Part of the Band',d:'4:30',mood:'literary folk pop'},
-      {t:'Oh Caroline',d:'3:26',mood:'heartfelt regret'},
-      {t:'I\'m in Love with You',d:'3:10',mood:'pure declaration'},
-      {t:'All I Need to Hear',d:'2:33',mood:'stripped devotion'},
-      {t:'Wintering',d:'3:54',mood:'seasonal melancholy'},
-      {t:'Human Too',d:'2:27',mood:'self-acceptance'},
-      {t:'When We Are Together',d:'5:33',mood:'expansive closer'}
+      {t:'About You',d:'5:17',mood:'nostalgic longing',sid:'1fDFHXcykq4iw8Gg7s5hG9'},
+      {t:'The 1975',d:'3:28',mood:'playful self-reference',sid:'7omxuGYsym1n2RlVf86OF9'},
+      {t:'Happiness',d:'5:02',mood:'bittersweet euphoria',sid:'35lxFAny9XDBkvE6r9j4uG'},
+      {t:'Looking for Somebody (To Love)',d:'3:27',mood:'upbeat desire',sid:'0eNfURq0r0oNSwFyw1VuVT'},
+      {t:'Part of the Band',d:'4:30',mood:'literary folk pop',sid:'4S80oe7OJnBVlhNrbQTnt3'},
+      {t:'Oh Caroline',d:'3:26',mood:'heartfelt regret',sid:'14dJexYlvd3t3XAtD1pYW1'},
+      {t:'I\'m in Love with You',d:'3:10',mood:'pure declaration',sid:'12g9IeQzX7xECLNxz8dpb5'},
+      {t:'All I Need to Hear',d:'2:33',mood:'stripped devotion',sid:'1RB8jMVr0eSo6ExOOvXavV'},
+      {t:'Wintering',d:'3:54',mood:'seasonal melancholy',sid:'4FxeY2UZeP3kpdBPbpGggN'},
+      {t:'Human Too',d:'2:27',mood:'self-acceptance',sid:'2PUHkK7V8XSoquIV8Skj7h'},
+      {t:'When We Are Together',d:'5:33',mood:'expansive closer',sid:'5M5TD1Tlpcgq0Fj1l6Mz6Z'}
     ]
   }
 ];
@@ -955,6 +987,7 @@ let state = {
 
 let audioCtx = null, oscillator = null, gainNode = null;
 let playInterval = null;
+var spotifyMode = true; // Default: use Spotify embeds when available
 
 /* ═══════════════════════════════════════════════════════════════
    INTRO
@@ -1047,6 +1080,45 @@ function updateVolume(){
   if(gainNode&&audioCtx){
     gainNode.gain.linearRampToValueAtTime(state.muted?0:state.volume*0.15,audioCtx.currentTime+0.05);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SPOTIFY EMBED
+   ═══════════════════════════════════════════════════════════════ */
+function loadSpotifyEmbed(trackId){
+  const wrap=document.getElementById('spotifyEmbedWrap');
+  const iframe=document.getElementById('spotifyEmbed');
+  if(!wrap||!iframe)return;
+  iframe.src='https://open.spotify.com/embed/track/'+trackId+'?utm_source=generator&theme=0';
+  wrap.style.display='block';
+}
+function hideSpotifyEmbed(){
+  const wrap=document.getElementById('spotifyEmbedWrap');
+  const iframe=document.getElementById('spotifyEmbed');
+  if(wrap)wrap.style.display='none';
+  if(iframe)iframe.src='';
+}
+function toggleSpotifyMode(){
+  spotifyMode=!spotifyMode;
+  const btn=document.getElementById('btnSpotifyMode');
+  if(btn)btn.classList.toggle('active',spotifyMode);
+  if(state.currentAlbumId!==null){
+    const track=ALBUMS[state.currentAlbumId].tracks[state.currentTrackIdx];
+    if(spotifyMode && track.sid && track.sid.length>0){
+      stopSound();
+      clearInterval(playInterval);
+      loadSpotifyEmbed(track.sid);
+    } else {
+      hideSpotifyEmbed();
+      if(state.isPlaying){
+        startSound(state.currentAlbumId,state.currentTrackIdx);
+        startPlayTimer();
+      }
+    }
+    updateNowPlaying();
+    updatePlayerUI();
+  }
+  showToast(spotifyMode?'&#127911; Spotify mode enabled':'&#127926; Web Audio mode enabled');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1167,7 +1239,7 @@ function renderTrackRows(albumId){
       return `<div class="track-row${playing?' playing':''}" ondblclick="playTrack(${albumId},${i})">
         <span class="track-num">${playing?'&#9654;':i+1}</span>
         <div class="track-title-wrap">
-          <div class="track-title">${t.t}</div>
+          <div class="track-title">${t.t}${t.sid?'<span class="track-spotify-badge" title="Available on Spotify">&#9679;</span>':''}</div>
           <div class="track-mood">${t.mood}</div>
         </div>
         <span class="track-album">${a.title}</span>
@@ -1219,19 +1291,30 @@ function playTrack(albumId,trackIdx){
   state.currentTrackIdx=trackIdx;
   state.isPlaying=true;
   state.elapsed=0;
-  const dur=parseDuration(ALBUMS[albumId].tracks[trackIdx].d);
+  const track=ALBUMS[albumId].tracks[trackIdx];
+  const dur=parseDuration(track.d);
   state.duration=dur||30;
   // Add to recently played
   state.recentlyPlayed=state.recentlyPlayed.filter(r=>!(r[0]===albumId&&r[1]===trackIdx));
   state.recentlyPlayed.unshift([albumId,trackIdx]);
   if(state.recentlyPlayed.length>20)state.recentlyPlayed.pop();
-  startSound(albumId,trackIdx);
-  startPlayTimer();
+  // Spotify or Web Audio API
+  const useSpotify = spotifyMode && track.sid && track.sid.length > 0;
+  if(useSpotify){
+    stopSound();
+    clearInterval(playInterval);
+    loadSpotifyEmbed(track.sid);
+  } else {
+    hideSpotifyEmbed();
+    startSound(albumId,trackIdx);
+    startPlayTimer();
+  }
   updatePlayerUI();
   updateNowPlaying();
   updateLyrics();
   renderRecent();
-  showToast('&#9654; Now playing: '+ALBUMS[albumId].tracks[trackIdx].t);
+  const prefix = useSpotify ? '&#127911; ' : '&#9654; ';
+  showToast(prefix+'Now playing: '+track.t);
 }
 function parseDuration(str){
   const parts=str.split(':');
@@ -1258,12 +1341,19 @@ function togglePlay(){
     playAlbum(0);return;
   }
   state.isPlaying=!state.isPlaying;
-  if(state.isPlaying){
-    startSound(state.currentAlbumId,state.currentTrackIdx);
-    startPlayTimer();
-  }else{
-    stopSound();
-    clearInterval(playInterval);
+  const track=ALBUMS[state.currentAlbumId].tracks[state.currentTrackIdx];
+  const useSpotify = spotifyMode && track.sid && track.sid.length > 0;
+  if(useSpotify){
+    // Spotify embed handles its own play/pause
+    showToast(state.isPlaying?'&#9654; Resumed':'&#10074;&#10074; Paused');
+  } else {
+    if(state.isPlaying){
+      startSound(state.currentAlbumId,state.currentTrackIdx);
+      startPlayTimer();
+    }else{
+      stopSound();
+      clearInterval(playInterval);
+    }
   }
   updatePlayerUI();
 }
@@ -1365,11 +1455,16 @@ function updateNowPlaying(){
   document.getElementById('npAlbum').textContent=a.title+' ('+a.year+')';
   const cover=document.getElementById('npCover');
   cover.className='np-cover '+a.coverClass;
+  const useSpotify = spotifyMode && t.sid && t.sid.length > 0;
+  const spotifyBadge = useSpotify ? ' <span class="track-spotify-badge" title="Playing via Spotify">&#9679;</span>' : '';
   document.getElementById('npMeta').innerHTML=`
     <span class="badge badge-pink">${t.mood}</span>
     <span class="badge" style="border-color:var(--border)">${t.d}</span>
-    <span class="badge" style="border-color:var(--border)">${a.year}</span>
+    <span class="badge" style="border-color:var(--border)">${a.year}</span>${spotifyBadge}
   `;
+  // Spotify indicator in player
+  const indicator = document.getElementById('playerSpotifyIndicator');
+  if(indicator) indicator.className = 'player-spotify-indicator' + (useSpotify ? ' visible' : '');
 }
 function updateLyrics(){
   if(state.currentAlbumId===null)return;
