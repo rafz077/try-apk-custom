@@ -1,4 +1,4 @@
-# simalakama project
+# My Project
 
 Hi, I'm Rafa Shaleh Al Ghaisan.
 
