@@ -1,0 +1,52 @@
+<?php include "includes/header.php";
+$label = isset($_GET["label"]) ? $_GET["label"] : "rendah";
+$confidence = isset($_GET["confidence"]) ? $_GET["confidence"] : "0";
+$recommendation = isset($_GET["recommendation"]) ? $_GET["recommendation"] : "";
+$plan1 = isset($_GET["plan1"]) ? $_GET["plan1"] : "";
+$plan2 = isset($_GET["plan2"]) ? $_GET["plan2"] : "";
+$plan3 = isset($_GET["plan3"]) ? $_GET["plan3"] : "";
+$class = $label === "tinggi" ? "high" : ($label === "sedang" ? "mid" : "low");
+$emoji = $label === "tinggi" ? "🚨" : ($label === "sedang" ? "⚠️" : "🌿");
+?>
+<main class="app-shell">
+    <section class="screen-card result-card active <?php echo $class; ?>">
+        <span class="chip">Hasil Screening</span>
+        <div class="result-emoji"><?php echo $emoji; ?></div>
+        <h1>Kecemasan digital kamu: <?php echo strtoupper(htmlspecialchars($label)); ?></h1>
+
+        <div class="score-ring" style="--score: <?php echo htmlspecialchars($confidence); ?>;">
+            <span><?php echo htmlspecialchars($confidence); ?>%</span>
+            <small>Confidence</small>
+        </div>
+
+        <div class="tab-card compact-card">
+            <div class="tab-nav">
+                <button class="tab-btn active" type="button" data-tab="hasil">Hasil</button>
+                <button class="tab-btn" type="button" data-tab="rencana">Rencana</button>
+                <button class="tab-btn" type="button" data-tab="catatan">Catatan</button>
+            </div>
+            <div class="tab-content active" id="hasil">
+                <h3>Rekomendasi Personal</h3>
+                <p><?php echo htmlspecialchars($recommendation); ?></p>
+            </div>
+            <div class="tab-content" id="rencana">
+                <h3>Rencana 24 Jam</h3>
+                <ul>
+                    <li><?php echo htmlspecialchars($plan1); ?></li>
+                    <li><?php echo htmlspecialchars($plan2); ?></li>
+                    <li><?php echo htmlspecialchars($plan3); ?></li>
+                </ul>
+            </div>
+            <div class="tab-content" id="catatan">
+                <h3>Catatan Penting</h3>
+                <p>Hasil ini bukan diagnosis medis. Jika rasa cemas mengganggu aktivitas harian, bicarakan dengan orang terpercaya atau tenaga profesional.</p>
+            </div>
+        </div>
+
+        <div class="action-row compact">
+            <a class="primary-btn" href="test.php">Tes Ulang</a>
+            <a class="soft-btn" href="tools.php">Vibe Tools</a>
+        </div>
+    </section>
+</main>
+<?php include "includes/footer.php"; ?>

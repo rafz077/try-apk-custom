@@ -1,0 +1,59 @@
+<?php include "includes/header.php"; ?>
+<main class="app-shell">
+    <section class="screen-card tools-screen active">
+        <span class="chip">Vibe Tools</span>
+        <h1>Reset mood tanpa ribet.</h1>
+        <p class="lead">Tools mini untuk bantu kamu jeda dari scroll, cek mood, bikin misi detox, fokus sebentar, dan nulis prompt singkat.</p>
+
+        <div class="tool-nav">
+            <button class="tool-tab active" type="button" data-tool="moodTool">Mood</button>
+            <button class="tool-tab" type="button" data-tool="detoxTool">Detox</button>
+            <button class="tool-tab" type="button" data-tool="focusTool">Focus</button>
+            <button class="tool-tab" type="button" data-tool="journalTool">Journal</button>
+        </div>
+
+        <div class="tool-panel active" id="moodTool">
+            <div class="mood-grid">
+                <button type="button" data-mood="tenang">😌<span>Tenang</span></button>
+                <button type="button" data-mood="overthinking">🫠<span>Overthinking</span></button>
+                <button type="button" data-mood="capek">😵‍💫<span>Capek</span></button>
+                <button type="button" data-mood="insecure">🥲<span>Insecure</span></button>
+            </div>
+            <div class="vibe-card" id="moodResult">
+                <h3>Pilih mood kamu</h3>
+                <p>MindCheck akan kasih action kecil yang cocok buat kondisi kamu sekarang.</p>
+            </div>
+        </div>
+
+        <div class="tool-panel" id="detoxTool">
+            <div class="vibe-card center">
+                <div class="tool-icon">🎮</div>
+                <h3>Digital Detox Mission</h3>
+                <p id="challengeText">Klik tombol di bawah untuk dapat misi detox singkat.</p>
+                <button class="primary-btn wide" id="challengeBtn" type="button">Generate Mission</button>
+            </div>
+        </div>
+
+        <div class="tool-panel" id="focusTool">
+            <div class="vibe-card center">
+                <div class="timer-ring">
+                    <span id="timerText">05:00</span>
+                    <small>Focus Sprint</small>
+                </div>
+                <p>Mode fokus 5 menit: taruh HP, kerjakan satu tugas kecil, lalu kembali dengan kepala lebih ringan.</p>
+                <button class="primary-btn wide" id="focusBtn" type="button">Start Focus</button>
+                <button class="soft-btn wide" id="resetTimerBtn" type="button">Reset Timer</button>
+            </div>
+        </div>
+
+        <div class="tool-panel" id="journalTool">
+            <div class="vibe-card center">
+                <div class="tool-icon">✨</div>
+                <h3>Journal Prompt</h3>
+                <p id="promptText">“Apa satu hal yang sebenarnya kamu butuhkan hari ini?”</p>
+                <button class="primary-btn wide" id="promptBtn" type="button">Prompt Baru</button>
+            </div>
+        </div>
+    </section>
+</main>
+<?php include "includes/footer.php"; ?>

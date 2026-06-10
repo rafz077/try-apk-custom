@@ -1,0 +1,92 @@
+<?php include "includes/header.php"; ?>
+<main class="app-shell">
+    <form action="process.php" method="POST" class="screen-card wizard-card active" id="screeningForm">
+        <div class="wizard-top">
+            <span class="chip">Screening 2 menit</span>
+            <div class="progress"><span id="progressBar"></span></div>
+        </div>
+
+        <section class="step active" data-step="1">
+            <h1>Profil singkat kamu</h1>
+            <p>Data ini membantu hasil penelitian dibaca secara umum.</p>
+            <label>Nama</label>
+            <input type="text" name="name" placeholder="Masukkan nama" required>
+            <label>Usia</label>
+            <input type="number" name="age" min="10" max="30" placeholder="Contoh: 18" required>
+        </section>
+
+        <section class="step" data-step="2">
+            <h1>Kebiasaan media sosial</h1>
+            <p>Jawab sesuai kondisi kamu dalam 7 hari terakhir.</p>
+            <label>Durasi penggunaan per hari</label>
+            <select name="screen_time" required>
+                <option value="">Pilih kondisi</option>
+                <option value="rendah">Kurang dari 2 jam</option>
+                <option value="sedang">2–5 jam</option>
+                <option value="tinggi">Lebih dari 5 jam</option>
+            </select>
+            <label>Seberapa sering membandingkan diri?</label>
+            <select name="comparison" required>
+                <option value="">Pilih kondisi</option>
+                <option value="rendah">Jarang</option>
+                <option value="sedang">Kadang-kadang</option>
+                <option value="tinggi">Sering</option>
+            </select>
+        </section>
+
+        <section class="step" data-step="3">
+            <h1>Dampak ke tubuh dan emosi</h1>
+            <p>Bagian ini melihat tanda tekanan digital.</p>
+            <label>Media sosial mengganggu tidur?</label>
+            <select name="sleep" required>
+                <option value="">Pilih</option>
+                <option value="tidak">Tidak</option>
+                <option value="ya">Ya</option>
+            </select>
+            <label>Gelisah saat tidak memegang ponsel?</label>
+            <select name="panic" required>
+                <option value="">Pilih</option>
+                <option value="tidak">Tidak</option>
+                <option value="ya">Ya</option>
+            </select>
+        </section>
+
+        <section class="step" data-step="4">
+            <h1>Pengalaman sosial online</h1>
+            <p>Tekanan digital dapat muncul dari komentar buruk atau standar visual.</p>
+            <label>Pernah mengalami cyberbullying?</label>
+            <select name="cyberbully" required>
+                <option value="">Pilih</option>
+                <option value="tidak">Tidak</option>
+                <option value="ya">Ya</option>
+            </select>
+            <label>Sering memakai filter/edit wajah?</label>
+            <select name="filter" required>
+                <option value="">Pilih kondisi</option>
+                <option value="rendah">Jarang</option>
+                <option value="sedang">Kadang-kadang</option>
+                <option value="tinggi">Sering</option>
+            </select>
+        </section>
+
+        <section class="step" data-step="5">
+            <h1>Dukungan sosial</h1>
+            <p>Dukungan sekitar penting untuk menjaga kesehatan mental.</p>
+            <label>Saat stres, kamu punya tempat cerita?</label>
+            <select name="support" required>
+                <option value="">Pilih kondisi</option>
+                <option value="baik">Banyak teman/keluarga yang mendukung</option>
+                <option value="cukup">Ada beberapa orang yang bisa diajak bicara</option>
+                <option value="buruk">Merasa tidak punya tempat bercerita</option>
+            </select>
+            <div class="summary-pill">Klik analisis untuk melihat hasil dan rekomendasi personal.</div>
+        </section>
+
+        <div class="wizard-actions">
+            <button type="button" class="soft-btn" id="prevBtn">Kembali</button>
+            <button type="button" class="primary-btn" id="nextBtn">Lanjut</button>
+            <button type="submit" class="primary-btn hidden" id="submitBtn">Analisis</button>
+        </div>
+    </form>
+</main>
+<?php include "includes/footer.php"; ?>
